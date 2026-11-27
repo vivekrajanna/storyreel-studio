@@ -121,6 +121,8 @@ Everything is controlled from `studio.config.json` — no code edits required:
 
 ## 🏗️ Architecture
 
+See the full **[High-Level Architecture Document](ARCHITECTURE.md)** (system context, sequence diagrams, multi-language WAV frame-alignment math, browser Canvas/WebAudio exporter, and security boundaries).
+
 ```text
 storyreel/
 ├── cli.py                # Unified CLI: init, doctor, build, watch, serve
