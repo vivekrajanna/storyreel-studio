@@ -1,0 +1,26 @@
+# Local secrets (NEVER commit!)
+.env
+.env.*
+!.env.example
+client_secret.json
+token.json
+*.pem
+*.key
+
+# Generated outputs & media caches
+output/
+assets/*
+!assets/.gitkeep
+studio_data.json
+
+# Python & OS artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+dist/
+build/
+.DS_Store
+Thumbs.db

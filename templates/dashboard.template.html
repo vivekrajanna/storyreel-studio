@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>__CHANNEL_NAME__ — StoryReel Studio</title>
+  <link href="__FONTS_URL__" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: rgba(17, 24, 39, 0.92);
+      --border: rgba(148, 163, 184, 0.22);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --gold: #fde047;
+      --sky: #38bdf8;
+      --green: #4ade80;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: radial-gradient(circle at top, #1e293b, #0b1120 70%);
+      color: var(--text);
+      font-family: __FONT_FAMILY__;
+      padding: 26px 20px 64px;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px; }
+    h1 {
+      margin: 0; font-size: 1.7rem; font-weight: 800;
+      background: linear-gradient(90deg, #fde047, #38bdf8, #f472b6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .tagline { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .tagline code { background: rgba(15,23,42,0.8); padding: 2px 6px; border-radius: 6px; color: #7dd3fc; }
+    .tabs { display: flex; gap: 10px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+    .tab-btn {
+      padding: 10px 18px; border-radius: 12px; border: 1px solid var(--border);
+      background: rgba(15,23,42,0.75); color: var(--muted);
+      font-family: inherit; font-size: 0.92rem; font-weight: 700; cursor: pointer;
+    }
+    .tab-btn.active { background: linear-gradient(120deg, #38bdf8, #818cf8); color: #0f172a; border-color: transparent; font-weight: 800; }
+    .tab-panel { display: none; flex-direction: column; gap: 20px; }
+    .tab-panel.active { display: flex; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 20px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+      overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 18px 40px rgba(0,0,0,0.38);
+    }
+    .thumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; background: #0f172a; }
+    .body { padding: 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .kicker { font-size: 0.78rem; color: var(--sky); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+    .card h2 { margin: 0; font-size: 1.16rem; color: var(--gold); }
+    .sub { margin: 0; font-size: 0.86rem; color: #cbd5e1; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .btn {
+      padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.28);
+      background: #0f172a; color: var(--text); text-decoration: none;
+      font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    }
+    .btn:hover { border-color: var(--sky); }
+    .btn.primary { background: linear-gradient(120deg, #4ade80, #22d3ee); color: #0f172a; border: none; }
+    .btn.ig { background: linear-gradient(120deg, #f59e0b, #ec4899, #8b5cf6); color: #ffffff; border: none; }
+    .subs {
+      margin-top: auto; padding-top: 10px; border-top: 1px solid rgba(148,163,184,0.16);
+      font-size: 0.8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    }
+    .pill {
+      padding: 3px 8px; border-radius: 999px; background: rgba(56,189,248,0.16);
+      color: #7dd3fc; text-decoration: none; font-weight: 700; font-size: 0.78rem;
+    }
+    .muted { color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid rgba(148,163,184,0.12); font-size: 0.86rem; }
+    th { background: rgba(15,23,42,0.8); color: var(--sky); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    select, input {
+      padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: #0f172a; color: var(--text); font-family: inherit; font-size: 0.84rem;
+    }
+    .add-bar {
+      display: flex; flex-wrap: wrap; gap: 10px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 14px; padding: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>🎬 __CHANNEL_NAME__ (__CHANNEL_HANDLE__)</h1>
+        <div class="tagline">Drop a Markdown story in <code>stories/</code> → run <code>python3 -m storyreel build stories/your_story.md</code></div>
+      </div>
+      <div class="tagline">Built Stories: <strong>__BUILT_COUNT__</strong></div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="episodes">🎬 Built Stories (__BUILT_COUNT__)</button>
+      <button class="tab-btn" data-tab="calendar">📅 Production Calendar</button>
+    </nav>
+
+    <section class="tab-panel active" id="tab-episodes">
+      <div class="grid">__EPISODE_CARDS__</div>
+    </section>
+
+    <section class="tab-panel" id="tab-calendar">
+      <div class="add-bar">
+        <input id="newEpNum" placeholder="EP 02" style="width:90px" />
+        <input id="newTitle" placeholder="New story idea title..." style="flex:1;min-width:220px" />
+        <input id="newDate" type="date" />
+        <button class="btn primary" id="addIdeaBtn">+ Add to Calendar</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Episode</th><th>Title</th><th>Target Date</th><th>Status</th><th>Links</th></tr>
+        </thead>
+        <tbody id="calendarBody"><tr><td colspan="5" class="muted">Loading calendar…</td></tr></tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    async function loadCalendar() {
+      const tbody = document.getElementById("calendarBody");
+      try {
+        const res = await fetch("/api/studio");
+        if (!res.ok) throw new Error("Run `python3 -m storyreel serve` to use the live calendar API.");
+        const data = await res.json();
+        const items = data.items || [];
+        if (!items.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="muted">No items yet — add an idea above or build a story.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = "";
+        items.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><strong>${item.episode_number || item.id}</strong></td>
+            <td>${item.title || item.slug}</td>
+            <td><input type="date" value="${item.target_date || ""}" data-field="target_date" /></td>
+            <td>
+              <select data-field="status">
+                ${["planned", "script_ready", "ready_to_upload", "published"].map(st =>
+                  `<option value="${st}" ${item.status === st ? "selected" : ""}>${st.replace(/_/g, " ")}</option>`
+                ).join("")}
+              </select>
+            </td>
+            <td>
+              ${item.player_url ? `<a class="pill" href="${item.player_url}">16:9</a>` : ""}
+              ${item.reel_url ? `<a class="pill" href="${item.reel_url}">9:16</a>` : ""}
+              ${item.thumb_url ? `<a class="pill" href="${item.thumb_url}">Thumb</a>` : ""}
+            </td>
+          `;
+          tr.querySelectorAll("input, select").forEach(el => {
+            el.addEventListener("change", async () => {
+              await fetch("/api/studio/item", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id: item.id, [el.dataset.field]: el.value }),
+              });
+            });
+          });
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="muted">${err.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById("addIdeaBtn").addEventListener("click", async () => {
+      const title = document.getElementById("newTitle").value.trim();
+      if (!title) return;
+      await fetch("/api/studio/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          episode_number: document.getElementById("newEpNum").value.trim() || "NEW",
+          title,
+          target_date: document.getElementById("newDate").value,
+        }),
+      });
+      document.getElementById("newTitle").value = "";
+      loadCalendar();
+    });
+
+    loadCalendar();
+  </script>
+</body>
+</html>

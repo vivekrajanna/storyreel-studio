@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Compile check
+        run: python -m compileall -q storyreel tests
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Offline mock build smoke test
+        run: python -m storyreel build stories/sample_01_curious_fox.md --provider mock
+
+      - name: Secret leak guard
+        run: |
+          if grep -rnE "AIza[0-9A-Za-z_-]{20,}|AQ\.[0-9A-Za-z_-]{20,}|sk-[0-9A-Za-z]{20,}" storyreel templates stories studio.config*.json README.md; then
+            echo "ERROR: Potential hardcoded API key detected!"
+            exit 1
+          fi

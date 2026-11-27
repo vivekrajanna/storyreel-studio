@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>__PAGE_TITLE__</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="__FONTS_URL__" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: rgba(17, 24, 39, 0.92);
+      --border: rgba(148, 163, 184, 0.24);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --gold: #fde047;
+      --sky: #38bdf8;
+      --ig-grad: linear-gradient(120deg, #f59e0b, #ec4899, #8b5cf6);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: radial-gradient(circle at top, #1e1b4b, #0b1120 68%);
+      color: var(--text);
+      font-family: __FONT_FAMILY__;
+      padding: 18px 18px 48px;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+    .topbar {
+      width: 100%; max-width: 1120px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .nav-link {
+      padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border);
+      background: rgba(15,23,42,0.8); color: #7dd3fc; text-decoration: none;
+      font-size: 0.82rem; font-weight: 700;
+    }
+    .nav-link:hover { border-color: var(--sky); }
+    .topbar h1 {
+      margin: 0; font-size: 1.25rem; font-weight: 800;
+      background: var(--ig-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .workspace {
+      width: 100%; max-width: 1120px;
+      display: grid; grid-template-columns: minmax(300px, 390px) 1fr; gap: 22px; align-items: start;
+    }
+    @media (max-width: 880px) {
+      .workspace { grid-template-columns: 1fr; justify-items: center; }
+    }
+    .phone-col {
+      width: 100%; max-width: 380px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .phone-frame {
+      position: relative; width: 100%; aspect-ratio: 9 / 16;
+      border-radius: 26px; overflow: hidden;
+      border: 3px solid rgba(236, 72, 153, 0.55);
+      background: #020617;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    #reelCanvas { width: 100%; height: 100%; display: block; }
+    .ig-safe-overlay {
+      position: absolute; inset: 0; pointer-events: none; display: none;
+      border: 2px dashed rgba(244,114,182,0.55);
+    }
+    .ig-safe-overlay.visible { display: block; }
+    .ig-safe-right {
+      position: absolute; right: 10px; bottom: 18%; width: 46px; height: 220px;
+      border-radius: 12px; background: rgba(244,114,182,0.22); border: 1px dashed #f472b6;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-around;
+      font-size: 0.72rem; color: #fbcfe8; font-weight: 700;
+    }
+    .ig-safe-bottom {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 14%;
+      background: rgba(244,114,182,0.18); border-top: 1px dashed #f472b6;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: #fbcfe8; font-weight: 700;
+    }
+    .time-readout {
+      width: 100%; display: flex; justify-content: space-between; font-size: 0.82rem;
+      color: var(--muted); font-weight: 700; padding: 0 4px;
+    }
+    .controls-col {
+      width: 100%; display: flex; flex-direction: column; gap: 14px;
+    }
+    .panel {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;
+    }
+    .panel-title {
+      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--sky); font-weight: 800; display: flex; justify-content: space-between; align-items: center;
+    }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    button.ctrl, a.ctrl {
+      padding: 8px 13px; border-radius: 10px; border: 1px solid var(--border);
+      background: #0f172a; color: var(--text); font-family: inherit;
+      font-size: 0.84rem; font-weight: 700; cursor: pointer; text-decoration: none;
+    }
+    button.ctrl:hover, a.ctrl:hover { background: #1e293b; border-color: var(--sky); }
+    button.ctrl.primary { background: linear-gradient(120deg, #38bdf8, #818cf8); color: #0f172a; border: none; font-weight: 800; }
+    button.ctrl.active { border-color: var(--gold); background: rgba(250, 204, 21, 0.16); color: var(--gold); }
+    button.ctrl.ig-export {
+      background: var(--ig-grad); color: #ffffff; border: none; font-weight: 800;
+      box-shadow: 0 8px 22px rgba(236,72,153,0.35);
+    }
+    button.ctrl.ig-export:disabled { opacity: 0.7; cursor: wait; }
+    button.lang-btn {
+      padding: 6px 13px; border-radius: 999px; border: 1px solid var(--border);
+      background: #0f172a; color: var(--muted); font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer;
+    }
+    button.lang-btn.active {
+      background: linear-gradient(120deg, #fde047, #fb923c); color: #0f172a; border-color: transparent; font-weight: 800;
+    }
+    .scene-toggle {
+      padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border);
+      background: rgba(15,23,42,0.75); color: var(--muted); font-family: inherit;
+      font-size: 0.8rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+    }
+    .scene-toggle.selected { border-color: #4ade80; background: rgba(74,222,128,0.16); color: #bbf7d0; }
+    .scene-toggle.playing { box-shadow: 0 0 0 2px var(--gold); color: var(--gold); }
+    .text-input {
+      width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: #0f172a; color: var(--text); font-family: inherit; font-size: 0.9rem; font-weight: 700;
+    }
+    .export-status {
+      display: none; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+      padding: 10px 14px; border-radius: 11px; background: rgba(236,72,153,0.14);
+      border: 1px solid rgba(236,72,153,0.45); font-size: 0.86rem; color: #fce7f3;
+    }
+    .export-status.visible { display: flex; }
+    .export-status a { color: #fde047; font-weight: 800; }
+    .caption-box {
+      margin: 0; padding: 12px 14px; border-radius: 10px; background: rgba(15,23,42,0.85);
+      border: 1px solid var(--border); color: #e2e8f0; font-family: inherit;
+      font-size: 0.86rem; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+    }
+    .dur-badge {
+      padding: 3px 9px; border-radius: 999px; background: rgba(74,222,128,0.18);
+      color: #86efac; font-size: 0.76rem; font-weight: 800;
+    }
+    .dur-badge.warn { background: rgba(251,146,60,0.2); color: #fdba74; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <a class="nav-link" href="../index.html">← All Stories</a>
+      <a class="nav-link" href="player.html">🎬 16:9 YouTube Player</a>
+      <h1>📱 __PAGE_HEADING__ — Insta Reel Studio (9:16)</h1>
+    </div>
+    <span style="color:#94a3b8;font-size:0.8rem;">1080×1920 Vertical • Face-Safe • Multi-Language</span>
+  </header>
+
+  <main class="workspace">
+    <section class="phone-col">
+      <div class="phone-frame">
+        <canvas id="reelCanvas" width="1080" height="1920"></canvas>
+        <div class="ig-safe-overlay" id="igSafeOverlay">
+          <div class="ig-safe-right"><span>❤️</span><span>💬</span><span>✈️</span><span>⋯</span></div>
+          <div class="ig-safe-bottom">Instagram Caption &amp; Audio Bar Area</div>
+        </div>
+      </div>
+      <div class="time-readout">
+        <span id="reelSceneStatus">Scene 1</span>
+        <span id="reelTimeStatus">0:00 / 0:00</span>
+      </div>
+    </section>
+
+    <section class="controls-col">
+      <div class="panel">
+        <div class="panel-title">
+          <span>🎬 Playback &amp; 1-Click 1080×1920 Reel Export</span>
+          <span class="dur-badge" id="totalDurBadge">~0:40 Reel</span>
+        </div>
+        <div class="btn-group">
+          <button class="ctrl primary" id="playBtn">▶ Preview Reel</button>
+          <button class="ctrl" id="prevBtn">⏮ Prev</button>
+          <button class="ctrl" id="nextBtn">⏭ Next</button>
+          <button class="ctrl" id="restartBtn">↺ Restart</button>
+          <button class="ctrl ig-export" id="exportReelBtn">⬇ Download Insta Reel (EN)</button>
+        </div>
+        <div class="export-status" id="exportStatus">
+          <span id="exportStatusText"></span>
+          <span id="exportStatusActions"></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><span>🌐 Reel Language (Audio, Captions &amp; IG Post)</span></div>
+        <div class="btn-group" id="langButtons"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span>✂️ On-Demand Scene Picker</span>
+          <div class="btn-group">
+            <button class="ctrl active" id="presetHighlightsBtn">⚡ Viral Highlights (&lt;60s)</button>
+            <button class="ctrl" id="presetFullBtn">🎬 Full Episode</button>
+          </div>
+        </div>
+        <div class="btn-group" id="scenePicker"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title"><span>🎨 Vertical Layout &amp; Hook Header</span></div>
+        <div class="btn-group">
+          <button class="ctrl active" id="frameBlurBtn">✨ Cinema Blur Frame (Face-Safe)</button>
+          <button class="ctrl" id="frameFillBtn">📱 Full-Bleed Zoom</button>
+          <button class="ctrl active" id="subToggleBtn">💬 Captions: ON</button>
+          <button class="ctrl active" id="musicToggleBtn">🎵 Music: ON</button>
+          <button class="ctrl active" id="sfxToggleBtn">🔊 SFX: ON</button>
+          <button class="ctrl active" id="voiceToggleBtn">🎙️ Voice: ON</button>
+          <button class="ctrl" id="safeZoneBtn">📐 IG Safe-Zone: OFF</button>
+        </div>
+        <label style="font-size:0.78rem;color:#94a3b8;font-weight:700;">Top Reel Hook Headline (editable):</label>
+        <input class="text-input" id="hookInput" type="text" placeholder="Top hook headline..." />
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span id="igCaptionHeading">📸 Instagram Reel Caption &amp; Hashtags (EN)</span>
+          <button class="ctrl" id="copyIgCaptionBtn">📋 Copy IG Caption (EN)</button>
+        </div>
+        <pre class="caption-box" id="igCaptionBox"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const EPISODE = __EPISODE_JSON__;
+    const ALL_SCENES = EPISODE.scenes || [];
+    const SLUG = EPISODE.slug || "episode";
+    const HANDLE = (EPISODE.thumbnail && EPISODE.thumbnail.handle) || "@YourChannel";
+    const AUDIO_LANGS = EPISODE.audio_languages || [{ code: "en", name: "English", label: "English (Primary)" }];
+    const UI_COPY = EPISODE.ui_copy || {};
+
+    let activeLang = EPISODE.primary_language || "en";
+    if (ALL_SCENES.length && ALL_SCENES[0].audio_by_lang && !ALL_SCENES[0].audio_by_lang[activeLang]) {
+      const avail = Object.keys(ALL_SCENES[0].audio_by_lang);
+      if (avail.length) activeLang = avail[0];
+    }
+
+    // Default highlight selection: Hook (first), Rules scene (if any), and Outro (last) — crisp ~35-48s Reel!
+    function computeHighlightIds() {
+      if (ALL_SCENES.length <= 3) return ALL_SCENES.map(s => s.id);
+      const chosen = new Set([ALL_SCENES[0].id]);
+      const rulesScene = ALL_SCENES.find(s => s.rules && s.rules.length);
+      if (rulesScene) chosen.add(rulesScene.id);
+      else if (ALL_SCENES.length > 2) chosen.add(ALL_SCENES[1].id);
+      chosen.add(ALL_SCENES[ALL_SCENES.length - 1].id);
+      return ALL_SCENES.filter(s => chosen.has(s.id)).map(s => s.id);
+    }
+
+    let selectedIds = new Set(computeHighlightIds());
+    let framingMode = "blur"; // "blur" | "fill"
+    let showSubs = true, musicOn = true, sfxOn = true, voiceOn = true, showSafeZone = false;
+    let isPlaying = false, curIdx = 0, sceneElapsed = 0, lastTs = null, rafId = null;
+    let imgCache = {}, bgmTimerId = null, audioCtx = null, exportAbort = null, lastExportUrl = null;
+    const voiceAudio = new Audio();
+    voiceAudio.preload = "auto";
+
+    const canvas = document.getElementById("reelCanvas");
+    const ctx = canvas.getContext("2d");
+    const playBtn = document.getElementById("playBtn");
+    const exportReelBtn = document.getElementById("exportReelBtn");
+    const exportStatus = document.getElementById("exportStatus");
+    const exportStatusText = document.getElementById("exportStatusText");
+    const exportStatusActions = document.getElementById("exportStatusActions");
+    const hookInput = document.getElementById("hookInput");
+    const igSafeOverlay = document.getElementById("igSafeOverlay");
+
+    const BGM_MELODY = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 392.00, 440.00, 392.00, 329.63, 293.66];
+
+    function getActiveScenes() {
+      const list = ALL_SCENES.filter(s => selectedIds.has(s.id));
+      return list.length ? list : ALL_SCENES.slice(0, 1);
+    }
+    function getSceneAudioFile(scene, lang = activeLang) {
+      const map = scene.audio_by_lang || {};
+      if (map[lang] && map[lang].file) return map[lang].file;
+      return scene.audioFile || "";
+    }
+    function getSceneDur(scene, lang = activeLang) {
+      const map = scene.audio_by_lang || {};
+      if (map[lang] && map[lang].durationSec) return Number(map[lang].durationSec) + 0.55;
+      return Math.max(4, Number(scene.audioDurationSec || scene.durationSec || 12) + 0.55);
+    }
+    function getSceneVoLines(scene, lang = activeLang) {
+      const lm = scene.vo_lines_by_lang || {};
+      if (Array.isArray(lm[lang]) && lm[lang].length) return lm[lang];
+      const vm = scene.vo_by_lang || {};
+      if (vm[lang]) return [vm[lang]];
+      if (Array.isArray(scene.vo_lines) && scene.vo_lines.length) return scene.vo_lines;
+      return scene.vo ? [scene.vo] : [];
+    }
+    function getActiveCaption(scene, elapsedSec, lang = activeLang) {
+      const lines = getSceneVoLines(scene, lang);
+      if (lines.length <= 1) return lines[0] || "";
+      const dur = Math.max(1, getSceneDur(scene, lang) - 0.55);
+      const totalChars = lines.reduce((sum, l) => sum + l.length, 0) || 1;
+      const t = Math.max(0, elapsedSec - 0.12);
+      let acc = 0;
+      for (let i = 0; i < lines.length; i++) {
+        const share = dur * (lines[i].length / totalChars);
+        if (t < acc + share || i === lines.length - 1) return lines[i];
+        acc += share;
+      }
+      return lines[lines.length - 1];
+    }
+    function defaultHookForLang(lang) {
+      const seo = (EPISODE.seo && EPISODE.seo.by_lang && EPISODE.seo.by_lang[lang]) || {};
+      if (seo.title) return seo.title.split("|")[0].trim();
+      if (lang === "kn") return (EPISODE.meta && EPISODE.meta.title_kn) || SLUG;
+      return (EPISODE.meta && EPISODE.meta.title_en) || (EPISODE.meta && EPISODE.meta.title_kn) || SLUG;
+    }
+    function formatTime(sec) {
+      const s = Math.max(0, Math.floor(sec));
+      return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+    }
+
+    function loadImg(src) {
+      if (imgCache[src]) return Promise.resolve(imgCache[src]);
+      return new Promise(resolve => {
+        const im = new Image();
+        im.onload = () => { imgCache[src] = im; resolve(im); };
+        im.onerror = () => resolve(null);
+        im.src = src;
+      });
+    }
+
+    function drawRoundedRect(c, x, y, w, h, r) {
+      c.beginPath();
+      c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r);
+      c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r);
+      c.arcTo(x, y, x + w, y, r); c.closePath();
+    }
+    function wrapLines(c, text, maxW) {
+      const words = String(text || "").split(/\s+/).filter(Boolean);
+      const out = []; let line = "";
+      for (const w of words) {
+        const test = line ? `${line} ${w}` : w;
+        if (c.measureText(test).width > maxW && line) { out.push(line); line = w; }
+        else line = test;
+      }
+      if (line) out.push(line);
+      return out;
+    }
+    function easeOutBack(t) {
+      if (t <= 0) return 0; if (t >= 1) return 1;
+      const c1 = 1.70158, c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
+
+    function renderReelFrame(targetCtx, scene, img, sceneTime, sceneDur, overallProgress, lang = activeLang, applyFade = true) {
+      const W = 1080, H = 1920;
+      const p = Math.max(0, Math.min(1, sceneTime / Math.max(0.5, sceneDur)));
+      targetCtx.fillStyle = "#090d1f";
+      targetCtx.fillRect(0, 0, W, H);
+
+      if (img) {
+        if (framingMode === "fill") {
+          // Full-bleed 9:16 animated zoom/pan
+          const scale = 1.04 + 0.08 * p;
+          const imgR = img.width / img.height, cR = W / H;
+          const drawW = imgR > cR ? H * imgR : W;
+          const drawH = imgR > cR ? H : W / imgR;
+          targetCtx.save();
+          targetCtx.translate(W / 2, H / 2);
+          targetCtx.scale(scale, scale);
+          targetCtx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+          targetCtx.restore();
+          const grad = targetCtx.createLinearGradient(0, 0, 0, H);
+          grad.addColorStop(0, "rgba(9,13,31,0.75)");
+          grad.addColorStop(0.24, "rgba(9,13,31,0.12)");
+          grad.addColorStop(0.65, "rgba(9,13,31,0.18)");
+          grad.addColorStop(1, "rgba(9,13,31,0.92)");
+          targetCtx.fillStyle = grad; targetCtx.fillRect(0, 0, W, H);
+        } else {
+          // Cinema Blur Frame: blurred full-height background + face-safe crisp rounded 16:9 card in middle
+          const bgScale = 1.25;
+          const bgW = H * (img.width / img.height);
+          targetCtx.save();
+          targetCtx.filter = "blur(26px) brightness(0.45) saturate(1.25)";
+          targetCtx.translate(W / 2, H / 2);
+          targetCtx.scale(bgScale, bgScale);
+          targetCtx.drawImage(img, -bgW / 2, -H / 2, bgW, H);
+          targetCtx.restore();
+
+          // Soft ambient top/bottom gradient
+          const grad = targetCtx.createLinearGradient(0, 0, 0, H);
+          grad.addColorStop(0, "rgba(9,13,31,0.78)");
+          grad.addColorStop(0.26, "rgba(9,13,31,0.22)");
+          grad.addColorStop(0.66, "rgba(9,13,31,0.28)");
+          grad.addColorStop(1, "rgba(9,13,31,0.92)");
+          targetCtx.fillStyle = grad; targetCtx.fillRect(0, 0, W, H);
+
+          // Crisp 16:9 framed stage in center (face-safe!)
+          const cardX = 48, cardW = W - 96, cardH = Math.round(cardW * 9 / 16);
+          const cardY = 470;
+          targetCtx.save();
+          drawRoundedRect(targetCtx, cardX, cardY, cardW, cardH, 34);
+          targetCtx.clip();
+          const kScale = scene.anim === "zoom-out" ? (1.12 - 0.1 * p) : (1.02 + 0.1 * p);
+          const kTx = scene.anim === "pan-lr" ? (0.04 - 0.08 * p) * cardW : 0;
+          targetCtx.translate(cardX + cardW / 2 + kTx, cardY + cardH / 2);
+          targetCtx.scale(kScale, kScale);
+          targetCtx.drawImage(img, -cardW / 2, -cardH / 2, cardW, cardH);
+          targetCtx.restore();
+
+          // Glowing frame border
+          targetCtx.save();
+          drawRoundedRect(targetCtx, cardX, cardY, cardW, cardH, 34);
+          targetCtx.lineWidth = 6;
+          const borderGrad = targetCtx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+          borderGrad.addColorStop(0, "#fde047"); borderGrad.addColorStop(0.5, "#38bdf8"); borderGrad.addColorStop(1, "#f472b6");
+          targetCtx.strokeStyle = borderGrad;
+          targetCtx.stroke();
+          targetCtx.restore();
+        }
+      }
+
+      // Floating animated particles
+      if (scene.particles && scene.particles.length) {
+        targetCtx.save();
+        targetCtx.font = "44px sans-serif"; targetCtx.textAlign = "center";
+        for (let i = 0; i < 6; i++) {
+          const speed = 6 + (i % 3) * 2;
+          const phase = ((sceneTime + i * 1.1) % speed) / speed;
+          targetCtx.globalAlpha = Math.sin(phase * Math.PI) * 0.72;
+          targetCtx.fillText(scene.particles[i % scene.particles.length], (0.12 + ((i * 0.16) % 0.78)) * W, H * (0.94 - phase * 0.82));
+        }
+        targetCtx.restore();
+      }
+
+      // Top Reel Progress Bar
+      targetCtx.fillStyle = "rgba(255,255,255,0.22)";
+      drawRoundedRect(targetCtx, 54, 62, W - 108, 12, 6); targetCtx.fill();
+      const progGrad = targetCtx.createLinearGradient(54, 0, W - 54, 0);
+      progGrad.addColorStop(0, "#fde047"); progGrad.addColorStop(0.5, "#ec4899"); progGrad.addColorStop(1, "#38bdf8");
+      targetCtx.fillStyle = progGrad;
+      drawRoundedRect(targetCtx, 54, 62, Math.max(18, (W - 108) * overallProgress), 12, 6); targetCtx.fill();
+
+      // Brand Pill + Episode Tag
+      targetCtx.save();
+      const pillText = `${HANDLE}  •  ${(EPISODE.meta && EPISODE.meta.episode_number) || "REEL"}`;
+      targetCtx.font = '800 32px "Fredoka", "Noto Sans Kannada", sans-serif';
+      const pillW = targetCtx.measureText(pillText).width + 58;
+      drawRoundedRect(targetCtx, (W - pillW) / 2, 108, pillW, 64, 32);
+      const pillG = targetCtx.createLinearGradient(0, 108, W, 172);
+      pillG.addColorStop(0, "#f59e0b"); pillG.addColorStop(0.55, "#ec4899"); pillG.addColorStop(1, "#8b5cf6");
+      targetCtx.fillStyle = pillG; targetCtx.fill();
+      targetCtx.lineWidth = 3; targetCtx.strokeStyle = "rgba(255,255,255,0.85)"; targetCtx.stroke();
+      targetCtx.fillStyle = "#ffffff"; targetCtx.textAlign = "center"; targetCtx.textBaseline = "middle";
+      targetCtx.fillText(pillText, W / 2, 141);
+      targetCtx.restore();
+
+      // Top Hook Headline (Bold, Centered, Multi-Line)
+      const hookText = (hookInput.value || defaultHookForLang(lang)).trim();
+      if (hookText) {
+        targetCtx.save();
+        targetCtx.font = '800 54px "Noto Sans Kannada", "Noto Sans Devanagari", "Fredoka", sans-serif';
+        const hLines = wrapLines(targetCtx, hookText, W - 130).slice(0, 3);
+        const startY = 232;
+        targetCtx.textAlign = "center"; targetCtx.textBaseline = "top";
+        hLines.forEach((ln, idx) => {
+          const y = startY + idx * 68;
+          targetCtx.lineWidth = 10; targetCtx.strokeStyle = "rgba(9,13,31,0.92)";
+          targetCtx.strokeText(ln, W / 2, y);
+          targetCtx.fillStyle = idx === 0 ? "#fde047" : "#ffffff";
+          targetCtx.fillText(ln, W / 2, y);
+        });
+        targetCtx.restore();
+      }
+
+      // Vertical Rules Cards (native 9:16 stacked cards!)
+      if (scene.rules && scene.rules.length) {
+        const cardTop = 470;
+        const cardH = 165, gap = 24;
+        scene.rules.slice(0, 3).forEach((r, idx) => {
+          const rp = (sceneTime - (0.3 + idx * 1.4)) / 0.55;
+          if (rp <= 0) return;
+          const sc = easeOutBack(rp);
+          const cy = cardTop + idx * (cardH + gap) + cardH / 2;
+          targetCtx.save();
+          targetCtx.translate(W / 2, cy); targetCtx.scale(sc, sc);
+          drawRoundedRect(targetCtx, -460, -cardH / 2, 920, cardH, 26);
+          targetCtx.fillStyle = "rgba(15,23,42,0.94)"; targetCtx.fill();
+          targetCtx.lineWidth = 4; targetCtx.strokeStyle = "#38bdf8"; targetCtx.stroke();
+          targetCtx.font = "64px sans-serif"; targetCtx.textAlign = "center"; targetCtx.textBaseline = "middle";
+          targetCtx.fillText(r.icon || "⭐", -385, 0);
+          targetCtx.textAlign = "left"; targetCtx.textBaseline = "top";
+          targetCtx.font = '800 36px "Noto Sans Kannada", "Noto Sans Devanagari", sans-serif';
+          targetCtx.fillStyle = "#fde047";
+          targetCtx.fillText(r.title || "", -320, -cardH / 2 + 24);
+          targetCtx.font = '600 28px "Noto Sans Kannada", "Noto Sans Devanagari", sans-serif';
+          targetCtx.fillStyle = "#e2e8f0";
+          const dLines = wrapLines(targetCtx, r.desc || "", 730).slice(0, 2);
+          dLines.forEach((dl, di) => targetCtx.fillText(dl, -320, -cardH / 2 + 76 + di * 36));
+          targetCtx.restore();
+        });
+      }
+
+      // Outro Follow/Subscribe CTA Pills
+      if (scene.outro) {
+        const ctaY = 1105;
+        const ctaCopy = lang === "hi"
+          ? "🔔 ऐसे और ब्रेन हैक्स के लिए Follow करें!"
+          : (lang === "kn" ? "🔔 ಇನ್ನಷ್ಟು ಕಥೆಗಳಿಗಾಗಿ Follow ಮಾಡಿ!" : `🔔 Follow ${HANDLE} for More Stories!`);
+        targetCtx.save();
+        targetCtx.font = '800 34px "Noto Sans Kannada", "Noto Sans Devanagari", "Fredoka", sans-serif';
+        const cw = Math.min(W - 100, targetCtx.measureText(ctaCopy).width + 68);
+        drawRoundedRect(targetCtx, (W - cw) / 2, ctaY, cw, 74, 37);
+        targetCtx.fillStyle = "#ef4444"; targetCtx.fill();
+        targetCtx.lineWidth = 4; targetCtx.strokeStyle = "#ffffff"; targetCtx.stroke();
+        targetCtx.fillStyle = "#ffffff"; targetCtx.textAlign = "center"; targetCtx.textBaseline = "middle";
+        targetCtx.fillText(ctaCopy, W / 2, ctaY + 38);
+        targetCtx.restore();
+      }
+
+      // Reels Kinetic Captions (positioned safely above IG bottom UI!)
+      if (showSubs) {
+        const cap = getActiveCaption(scene, sceneTime, lang);
+        if (cap) {
+          targetCtx.save();
+          targetCtx.font = '800 42px "Noto Sans Kannada", "Noto Sans Devanagari", "Fredoka", sans-serif';
+          const cLines = wrapLines(targetCtx, cap, W - 180).slice(0, 4);
+          const lh = 56;
+          const boxH = cLines.length * lh + 44;
+          const maxLineW = Math.max(...cLines.map(l => targetCtx.measureText(l).width), 280);
+          const boxW = Math.min(W - 110, maxLineW + 76);
+          const boxX = (W - boxW) / 2;
+          const boxY = 1235;
+          drawRoundedRect(targetCtx, boxX, boxY, boxW, boxH, 26);
+          targetCtx.fillStyle = "rgba(15,23,42,0.88)"; targetCtx.fill();
+          targetCtx.lineWidth = 4; targetCtx.strokeStyle = "rgba(253,224,71,0.82)"; targetCtx.stroke();
+          targetCtx.textAlign = "center"; targetCtx.textBaseline = "top";
+          cLines.forEach((line, idx) => {
+            targetCtx.fillStyle = idx === 0 ? "#fde047" : "#ffffff";
+            targetCtx.fillText(line, W / 2, boxY + 22 + idx * lh);
+          });
+          targetCtx.restore();
+        }
+      }
+
+      // Bottom Handle Watermark (clear of IG caption bar)
+      targetCtx.save();
+      targetCtx.font = '700 28px "Fredoka", sans-serif';
+      targetCtx.fillStyle = "rgba(226,232,240,0.8)";
+      targetCtx.textAlign = "center"; targetCtx.textBaseline = "middle";
+      const footerLang = AUDIO_LANGS.map(l => l.name || l.code.toUpperCase()).join(" • ");
+      targetCtx.fillText(`${HANDLE}  •  ${footerLang}`, W / 2, 1610);
+      targetCtx.restore();
+
+      // Smooth fade in/out transition (only during live playback or video export, never hiding static 0:00 preview!)
+      if (applyFade) {
+        if (sceneTime < 0.25) {
+          targetCtx.fillStyle = `rgba(9,13,31,${1 - sceneTime / 0.25})`; targetCtx.fillRect(0, 0, W, H);
+        } else if (sceneDur - sceneTime < 0.25) {
+          targetCtx.fillStyle = `rgba(9,13,31,${1 - (sceneDur - sceneTime) / 0.25})`; targetCtx.fillRect(0, 0, W, H);
+        }
+      }
+    }
+
+    function scheduleBgmNote(aCtx, dest, freq, when, gainVal) {
+      const osc = aCtx.createOscillator(), g = aCtx.createGain();
+      osc.type = "triangle"; osc.frequency.setValueAtTime(freq, when);
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.exponentialRampToValueAtTime(gainVal, when + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, when + 0.36);
+      osc.connect(g); g.connect(dest); osc.start(when); osc.stop(when + 0.38);
+    }
+    function scheduleSfx(aCtx, dest, kind, when) {
+      if (!sfxOn) return;
+      const notes = {
+        pop: [440, 660], ding: [784, 1046.5], whoosh: [280, 520, 740],
+        sparkle: [523.25, 659.25, 783.99, 1046.5], cheer: [523.25, 659.25, 783.99, 1046.5, 1318.5],
+      }[kind] || [523.25, 783.99];
+      notes.forEach((freq, i) => {
+        const osc = aCtx.createOscillator(), g = aCtx.createGain();
+        osc.type = kind === "whoosh" ? "triangle" : "sine";
+        osc.frequency.setValueAtTime(freq, when + i * 0.08);
+        g.gain.setValueAtTime(0.001, when + i * 0.08);
+        g.gain.exponentialRampToValueAtTime(0.08, when + i * 0.08 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, when + i * 0.08 + 0.24);
+        osc.connect(g); g.connect(dest); osc.start(when + i * 0.08); osc.stop(when + i * 0.08 + 0.26);
+      });
+    }
+
+    function startLiveBgm() {
+      stopLiveBgm();
+      if (!musicOn) return;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx) audioCtx = new AC();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        let step = 0;
+        const tick = () => {
+          if (!isPlaying || !musicOn) return;
+          scheduleBgmNote(audioCtx, audioCtx.destination, BGM_MELODY[step % BGM_MELODY.length], audioCtx.currentTime, 0.028);
+          step++;
+        };
+        tick(); bgmTimerId = setInterval(tick, 420);
+      } catch (_) {}
+    }
+    function stopLiveBgm() { if (bgmTimerId) { clearInterval(bgmTimerId); bgmTimerId = null; } }
+
+    function playLiveVoice(scene) {
+      voiceAudio.pause();
+      const af = getSceneAudioFile(scene, activeLang);
+      if (!voiceOn || !af) return;
+      if (!voiceAudio.src.endsWith(af)) voiceAudio.src = af;
+      voiceAudio.currentTime = 0;
+      voiceAudio.play().catch(() => {});
+    }
+
+    function computeTimelineInfo() {
+      const scenes = getActiveScenes();
+      let total = 0;
+      const offsets = scenes.map(s => {
+        const start = total;
+        const dur = getSceneDur(s, activeLang);
+        total += dur;
+        return { scene: s, start, dur };
+      });
+      return { scenes, offsets, total };
+    }
+
+    async function drawCurrentPreview() {
+      const info = computeTimelineInfo();
+      if (curIdx >= info.scenes.length) curIdx = 0;
+      const cur = info.offsets[curIdx];
+      const img = await loadImg(cur.scene.image);
+      const overall = Math.min(1, (cur.start + sceneElapsed) / Math.max(1, info.total));
+      renderReelFrame(ctx, cur.scene, img, sceneElapsed, cur.dur, overall, activeLang, isPlaying);
+      document.getElementById("reelSceneStatus").textContent = `${cur.scene.label} (${curIdx + 1}/${info.scenes.length}) • ${activeLang.toUpperCase()}`;
+      document.getElementById("reelTimeStatus").textContent = `${formatTime(cur.start + sceneElapsed)} / ${formatTime(info.total)}`;
+    }
+
+    function tickPreview(ts) {
+      if (!isPlaying) return;
+      if (lastTs === null) lastTs = ts;
+      const dt = (ts - lastTs) / 1000; lastTs = ts;
+      sceneElapsed += dt;
+      const info = computeTimelineInfo();
+      const cur = info.offsets[curIdx];
+      if (sceneElapsed >= cur.dur) {
+        if (curIdx < info.scenes.length - 1) {
+          curIdx++; sceneElapsed = 0;
+          playLiveVoice(info.scenes[curIdx]);
+          if (audioCtx && sfxOn) scheduleSfx(audioCtx, audioCtx.destination, info.scenes[curIdx].sfx, audioCtx.currentTime);
+          renderScenePicker();
+        } else {
+          setPlaying(false);
+          curIdx = 0; sceneElapsed = 0;
+          renderScenePicker(); drawCurrentPreview();
+          return;
+        }
+      }
+      drawCurrentPreview();
+      rafId = requestAnimationFrame(tickPreview);
+    }
+
+    function setPlaying(play) {
+      isPlaying = play;
+      playBtn.textContent = isPlaying ? "⏸ Pause Reel" : "▶ Preview Reel";
+      if (isPlaying) {
+        lastTs = null;
+        const scenes = getActiveScenes();
+        startLiveBgm();
+        playLiveVoice(scenes[curIdx]);
+        rafId = requestAnimationFrame(tickPreview);
+      } else {
+        if (rafId) cancelAnimationFrame(rafId);
+        stopLiveBgm(); voiceAudio.pause();
+      }
+    }
+
+    function buildIgCaption(lang) {
+      const seoByLang = (EPISODE.seo && EPISODE.seo.by_lang) || {};
+      const pack = seoByLang[lang] || EPISODE.seo || {};
+      const hook = (hookInput.value || defaultHookForLang(lang)).trim();
+      const descLines = (pack.description || "").split("\n").filter(l => l.trim() && !l.startsWith("🎧") && !l.startsWith("⏱️") && !/^\d+:\d+/.test(l.trim()) && !l.startsWith("#"));
+      const intro = descLines[0] || "";
+      const takeaways = descLines.filter(l => /^[^\w\s]/.test(l) && !l.startsWith("📚") && !l.startsWith("🌟") && !l.startsWith("🔔")).slice(0, 3);
+      const cta = lang === "hi"
+        ? `👉 ऐसे और 1-मिनट के वीडियो के लिए ${HANDLE} को Follow करें और अपने दोस्तों के साथ शेयर करें!`
+        : (lang === "kn"
+          ? `👉 ಇನ್ನಷ್ಟು 1-ನಿಮಿಷದ ವಿಡಿಯೋಗಳಿಗಾಗಿ ${HANDLE} ಫಾಲೋ ಮಾಡಿ & ಫ್ರೆಂಡ್ಸ್ ಜೊತೆ ಶೇರ್ ಮಾಡಿ!`
+          : `👉 Follow ${HANDLE} for more bite-sized animated stories & save this Reel!`);
+      const hashtags = UI_COPY.hashtags
+        ? `#InstagramReels ${UI_COPY.hashtags}`
+        : "#InstagramReels #Storytelling #AnimatedVideo #StoryReelStudio";
+      const parts = [hook, intro];
+      if (takeaways.length) parts.push(takeaways.join("\n"));
+      parts.push(cta, hashtags);
+      return parts.filter(Boolean).join("\n\n");
+    }
+
+    function renderIgCaption() {
+      const code = activeLang.toUpperCase();
+      document.getElementById("igCaptionHeading").textContent = `📸 Instagram Reel Caption & Hashtags (${code})`;
+      document.getElementById("copyIgCaptionBtn").textContent = `📋 Copy IG Caption (${code})`;
+      document.getElementById("igCaptionBox").textContent = buildIgCaption(activeLang);
+    }
+
+    function renderLangButtons() {
+      const wrap = document.getElementById("langButtons");
+      wrap.innerHTML = "";
+      AUDIO_LANGS.forEach(cfg => {
+        const b = document.createElement("button");
+        b.className = "lang-btn" + (cfg.code === activeLang ? " active" : "");
+        b.textContent = cfg.label;
+        b.addEventListener("click", () => {
+          activeLang = cfg.code;
+          hookInput.value = defaultHookForLang(activeLang);
+          exportReelBtn.textContent = `⬇ Download Insta Reel (${activeLang.toUpperCase()})`;
+          renderLangButtons(); renderScenePicker(); renderIgCaption();
+          if (isPlaying) playLiveVoice(getActiveScenes()[curIdx]);
+          drawCurrentPreview();
+        });
+        wrap.appendChild(b);
+      });
+      exportReelBtn.textContent = `⬇ Download Insta Reel (${activeLang.toUpperCase()})`;
+    }
+
+    function renderScenePicker() {
+      const wrap = document.getElementById("scenePicker");
+      wrap.innerHTML = "";
+      const activeList = getActiveScenes();
+      const playingId = activeList[curIdx] ? activeList[curIdx].id : null;
+      ALL_SCENES.forEach(scene => {
+        const isSel = selectedIds.has(scene.id);
+        const btn = document.createElement("button");
+        btn.className = "scene-toggle" + (isSel ? " selected" : "") + (scene.id === playingId ? " playing" : "");
+        btn.textContent = `${isSel ? "✓" : "+"} ${scene.label} (${Math.round(getSceneDur(scene, activeLang))}s)`;
+        btn.addEventListener("click", () => {
+          if (selectedIds.has(scene.id)) {
+            if (selectedIds.size <= 1) return; // keep at least 1 scene
+            selectedIds.delete(scene.id);
+          } else {
+            selectedIds.add(scene.id);
+          }
+          curIdx = 0; sceneElapsed = 0;
+          if (isPlaying) setPlaying(false);
+          updatePresetHighlights();
+          renderScenePicker(); drawCurrentPreview();
+        });
+        wrap.appendChild(btn);
+      });
+      const info = computeTimelineInfo();
+      const badge = document.getElementById("totalDurBadge");
+      badge.textContent = `~${formatTime(info.total)} Reel (${info.scenes.length} scenes)`;
+      badge.classList.toggle("warn", info.total > 90);
+    }
+
+    function updatePresetHighlights() {
+      const fullSelected = selectedIds.size === ALL_SCENES.length;
+      document.getElementById("presetFullBtn").classList.toggle("active", fullSelected);
+      document.getElementById("presetHighlightsBtn").classList.toggle("active", !fullSelected);
+    }
+
+    function pickRecorderMime() {
+      if (typeof MediaRecorder === "undefined") return null;
+      const cands = [
+        { mime: "video/mp4;codecs=avc1.42E01E,mp4a.40.2", ext: "mp4" },
+        { mime: "video/mp4", ext: "mp4" },
+        { mime: "video/webm;codecs=vp9,opus", ext: "webm" },
+        { mime: "video/webm;codecs=vp8,opus", ext: "webm" },
+        { mime: "video/webm", ext: "webm" },
+      ];
+      for (const c of cands) { if (MediaRecorder.isTypeSupported(c.mime)) return c; }
+      return { mime: "", ext: "webm" };
+    }
+
+    async function exportReelVideo() {
+      const fmt = pickRecorderMime();
+      if (!fmt) { exportStatus.classList.add("visible"); exportStatusText.textContent = "Export unsupported in this browser."; return; }
+      if (isPlaying) setPlaying(false);
+      const exportLang = activeLang;
+      exportReelBtn.disabled = true; exportReelBtn.textContent = "⏳ Preparing Reel…";
+      exportStatus.classList.add("visible"); exportStatusActions.innerHTML = "";
+      exportStatusText.textContent = `Loading scenes and ${exportLang.toUpperCase()} audio for 1080×1920 Reel…`;
+
+      let cancelled = false;
+      const cancelBtn = document.createElement("button");
+      cancelBtn.className = "ctrl"; cancelBtn.textContent = "✖ Cancel";
+      cancelBtn.addEventListener("click", () => { cancelled = true; if (exportAbort) exportAbort(); });
+      exportStatusActions.appendChild(cancelBtn);
+
+      try {
+        await document.fonts.ready;
+        const scenes = getActiveScenes();
+        const imgs = {};
+        for (const s of scenes) imgs[s.image] = await loadImg(s.image);
+
+        const AC = window.AudioContext || window.webkitAudioContext;
+        const exCtx = new AC();
+        if (exCtx.state === "suspended") await exCtx.resume();
+        const dest = exCtx.createMediaStreamDestination();
+
+        const timeline = [];
+        let cursor = 0;
+        for (const s of scenes) {
+          const af = getSceneAudioFile(s, exportLang);
+          let buf = null;
+          if (voiceOn && af) {
+            const arr = await (await fetch(af)).arrayBuffer();
+            buf = await exCtx.decodeAudioData(arr);
+          }
+          const dur = buf ? buf.duration + 0.55 : getSceneDur(s, exportLang);
+          timeline.push({ scene: s, img: imgs[s.image], buf, start: cursor, dur, end: cursor + dur });
+          cursor += dur;
+        }
+        if (cancelled) { await exCtx.close(); return; }
+        const totalDur = cursor;
+
+        const exCanvas = document.createElement("canvas");
+        exCanvas.width = 1080; exCanvas.height = 1920;
+        const exCanvasCtx = exCanvas.getContext("2d");
+        const stream = new MediaStream([...exCanvas.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+        const recorder = new MediaRecorder(stream, fmt.mime ? { mimeType: fmt.mime, videoBitsPerSecond: 6_000_000 } : { videoBitsPerSecond: 6_000_000 });
+        const chunks = [];
+        recorder.ondataavailable = e => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+        const donePromise = new Promise(r => { recorder.onstop = r; });
+
+        const startT = exCtx.currentTime + 0.15;
+        if (musicOn) {
+          let step = 0;
+          for (let mt = 0; mt < totalDur; mt += 0.42) {
+            scheduleBgmNote(exCtx, dest, BGM_MELODY[step % BGM_MELODY.length], startT + mt, 0.03);
+            step++;
+          }
+        }
+        timeline.forEach(item => {
+          scheduleSfx(exCtx, dest, item.scene.sfx, startT + item.start);
+          if (item.buf) {
+            const srcNode = exCtx.createBufferSource();
+            srcNode.buffer = item.buf; srcNode.connect(dest);
+            srcNode.start(startT + item.start + 0.12);
+          }
+        });
+
+        let stopLoop = false;
+        exportAbort = () => { stopLoop = true; if (recorder.state !== "inactive") recorder.stop(); };
+        recorder.start(500);
+        exportReelBtn.textContent = "⏺ Exporting 9:16 Reel…";
+
+        await new Promise(resolve => {
+          function stepFrame() {
+            if (stopLoop || cancelled) { resolve(); return; }
+            const t = Math.max(0, exCtx.currentTime - startT);
+            const active = timeline.find(item => t >= item.start && t < item.end) || timeline[timeline.length - 1];
+            renderReelFrame(exCanvasCtx, active.scene, active.img, Math.max(0, Math.min(active.dur, t - active.start)), active.dur, Math.min(1, t / totalDur), exportLang);
+            const pct = Math.min(100, Math.round((t / totalDur) * 100));
+            exportStatusText.textContent = `⏺ Rendering 1080×1920 Reel (${pct}% • ${formatTime(t)} / ${formatTime(totalDur)}) — keep tab open…`;
+            if (t >= totalDur) { resolve(); return; }
+            requestAnimationFrame(stepFrame);
+          }
+          requestAnimationFrame(stepFrame);
+        });
+
+        if (recorder.state !== "inactive") recorder.stop();
+        await donePromise; await exCtx.close();
+        if (cancelled) { exportStatusText.textContent = "Reel export cancelled."; exportStatusActions.innerHTML = ""; return; }
+
+        const blob = new Blob(chunks, { type: fmt.mime || `video/${fmt.ext}` });
+        if (lastExportUrl) URL.revokeObjectURL(lastExportUrl);
+        lastExportUrl = URL.createObjectURL(blob);
+        const filename = `${SLUG}_insta_reel_${exportLang}.${fmt.ext}`;
+        const a = document.createElement("a"); a.href = lastExportUrl; a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+
+        exportStatusText.textContent = `✅ 1080×1920 Reel Ready (${(blob.size / (1024 * 1024)).toFixed(1)} MB, ${filename}) — upload to Instagram Reels or YouTube Shorts!`;
+        exportStatusActions.innerHTML = "";
+        const again = document.createElement("a"); again.href = lastExportUrl; again.download = filename; again.textContent = `⬇ Save ${filename} again`;
+        exportStatusActions.appendChild(again);
+      } catch (err) {
+        exportStatusText.textContent = `Export failed: ${err.message || err}`; exportStatusActions.innerHTML = "";
+      } finally {
+        exportAbort = null; exportReelBtn.disabled = false;
+        exportReelBtn.textContent = `⬇ Download Insta Reel (${activeLang.toUpperCase()})`;
+      }
+    }
+
+    // Wire UI Events
+    playBtn.addEventListener("click", () => setPlaying(!isPlaying));
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      const scenes = getActiveScenes();
+      curIdx = (curIdx - 1 + scenes.length) % scenes.length; sceneElapsed = 0;
+      if (isPlaying) playLiveVoice(scenes[curIdx]);
+      renderScenePicker(); drawCurrentPreview();
+    });
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      const scenes = getActiveScenes();
+      curIdx = (curIdx + 1) % scenes.length; sceneElapsed = 0;
+      if (isPlaying) playLiveVoice(scenes[curIdx]);
+      renderScenePicker(); drawCurrentPreview();
+    });
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      curIdx = 0; sceneElapsed = 0;
+      if (isPlaying) playLiveVoice(getActiveScenes()[0]);
+      renderScenePicker(); drawCurrentPreview();
+    });
+    exportReelBtn.addEventListener("click", exportReelVideo);
+
+    document.getElementById("presetHighlightsBtn").addEventListener("click", () => {
+      selectedIds = new Set(computeHighlightIds());
+      curIdx = 0; sceneElapsed = 0; if (isPlaying) setPlaying(false);
+      updatePresetHighlights(); renderScenePicker(); drawCurrentPreview();
+    });
+    document.getElementById("presetFullBtn").addEventListener("click", () => {
+      selectedIds = new Set(ALL_SCENES.map(s => s.id));
+      curIdx = 0; sceneElapsed = 0; if (isPlaying) setPlaying(false);
+      updatePresetHighlights(); renderScenePicker(); drawCurrentPreview();
+    });
+
+    document.getElementById("frameBlurBtn").addEventListener("click", () => {
+      framingMode = "blur";
+      document.getElementById("frameBlurBtn").classList.add("active");
+      document.getElementById("frameFillBtn").classList.remove("active");
+      drawCurrentPreview();
+    });
+    document.getElementById("frameFillBtn").addEventListener("click", () => {
+      framingMode = "fill";
+      document.getElementById("frameFillBtn").classList.add("active");
+      document.getElementById("frameBlurBtn").classList.remove("active");
+      drawCurrentPreview();
+    });
+
+    document.getElementById("subToggleBtn").addEventListener("click", e => {
+      showSubs = !showSubs; e.target.classList.toggle("active", showSubs);
+      e.target.textContent = `💬 Captions: ${showSubs ? "ON" : "OFF"}`; drawCurrentPreview();
+    });
+    document.getElementById("musicToggleBtn").addEventListener("click", e => {
+      musicOn = !musicOn; e.target.classList.toggle("active", musicOn);
+      e.target.textContent = `🎵 Music: ${musicOn ? "ON" : "OFF"}`;
+      if (!musicOn) stopLiveBgm(); else if (isPlaying) startLiveBgm();
+    });
+    document.getElementById("sfxToggleBtn").addEventListener("click", e => {
+      sfxOn = !sfxOn; e.target.classList.toggle("active", sfxOn);
+      e.target.textContent = `🔊 SFX: ${sfxOn ? "ON" : "OFF"}`;
+    });
+    document.getElementById("voiceToggleBtn").addEventListener("click", e => {
+      voiceOn = !voiceOn; e.target.classList.toggle("active", voiceOn);
+      e.target.textContent = `🎙️ Voice: ${voiceOn ? "ON" : "OFF"}`;
+      if (!voiceOn) voiceAudio.pause(); else if (isPlaying) playLiveVoice(getActiveScenes()[curIdx]);
+    });
+    document.getElementById("safeZoneBtn").addEventListener("click", e => {
+      showSafeZone = !showSafeZone; e.target.classList.toggle("active", showSafeZone);
+      e.target.textContent = `📐 IG Safe-Zone: ${showSafeZone ? "ON" : "OFF"}`;
+      igSafeOverlay.classList.toggle("visible", showSafeZone);
+    });
+    hookInput.addEventListener("input", () => { renderIgCaption(); drawCurrentPreview(); });
+
+    document.getElementById("copyIgCaptionBtn").addEventListener("click", async e => {
+      const btn = e.target;
+      const code = activeLang.toUpperCase();
+      try {
+        await navigator.clipboard.writeText(buildIgCaption(activeLang));
+        btn.textContent = "✅ Copied!";
+        setTimeout(() => { btn.textContent = `📋 Copy IG Caption (${code})`; }, 1600);
+      } catch (_) { btn.textContent = "Select & Copy below"; }
+    });
+
+    // Init
+    hookInput.value = defaultHookForLang(activeLang);
+    renderLangButtons();
+    updatePresetHighlights();
+    renderScenePicker();
+    renderIgCaption();
+    document.fonts.ready.then(() => drawCurrentPreview());
+  </script>
+</body>
+</html>

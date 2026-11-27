@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "storyreel-studio"
+version = "0.1.0"
+description = "Bring-Your-Own-Key Markdown-to-Video Studio for 16:9 YouTube Videos, 9:16 Instagram Reels, Multi-Language Audio, Subtitles, Thumbnails & SEO Packs."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+storyreel = "storyreel.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["storyreel*"]

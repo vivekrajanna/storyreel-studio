@@ -1,0 +1,57 @@
+{
+  "handle": "@YourChannel",
+  "channel_name": "Your Channel Studio",
+  "primary_language": "en",
+  "audio_languages": [
+    { "code": "en", "name": "English", "label": "English (Primary)" }
+  ],
+  "subtitle_languages": [
+    { "code": "en", "name": "English" }
+  ],
+  "models": {
+    "text": "gemini-2.5-flash",
+    "tts": "gemini-2.5-flash-preview-tts",
+    "images": [
+      "gemini-2.5-flash-image"
+    ]
+  },
+  "voice": {
+    "default": "Achird",
+    "by_language": {},
+    "style": "Speak as a warm, engaging, clear storyteller with lively, expressive pacing suitable for an educational animated video."
+  },
+  "characters": [
+    {
+      "name": "Milo",
+      "description": "a curious young orange fox wearing a small teal explorer scarf and round glasses"
+    },
+    {
+      "name": "Pip",
+      "description": "a tiny cheerful glowing firefly companion"
+    }
+  ],
+  "visual_style": {
+    "prefix": "Full-bleed seamless edge-to-edge 16:9 2D Pixar-inspired flat vector storybook cartoon illustration, bright inviting colors, clean outlines, no borders, no top strips, no letterbox bars, strictly zero text anywhere in the image. Keep characters framed cleanly in the lower-middle composition with smooth continuous scenery extending to all four edges.",
+    "aspect_ratio": "16:9"
+  },
+  "timing": {
+    "scene_padding_sec": 0.8,
+    "speech_offset_sec": 0.15,
+    "default_scene_duration_sec": 14
+  },
+  "brand": {
+    "fallback_image": "brand/placeholder.svg",
+    "accent_primary": "#fde047",
+    "accent_secondary": "#38bdf8",
+    "fonts_url": "https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap",
+    "font_family": "\"Plus Jakarta Sans\", \"Fredoka\", -apple-system, BlinkMacSystemFont, sans-serif"
+  },
+  "ui_copy": {
+    "outro_big": "What Do You Think?",
+    "outro_sub": "Share your thoughts in the comments! 👇",
+    "cta_like": "👍 Like",
+    "cta_comment": "💬 Comment",
+    "cta_subscribe": "🔔 Subscribe",
+    "hashtags": "#Storytelling #AnimatedVideo #Education #Learning #StoryReelStudio"
+  }
+}

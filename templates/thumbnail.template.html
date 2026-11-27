@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>__PAGE_TITLE__</title>
+  <link href="__FONTS_URL__" rel="stylesheet">
+  <style>
+    body {
+      margin: 0; min-height: 100vh; background: #0b1120; color: #f8fafc;
+      font-family: __FONT_FAMILY__;
+      display: flex; flex-direction: column; align-items: center; padding: 24px 16px 40px; gap: 16px;
+    }
+    .header { width: 100%; max-width: 960px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .header a { color: #7dd3fc; text-decoration: none; font-weight: 700; font-size: 0.88rem; }
+    h1 { margin: 0; font-size: 1.2rem; color: #fde047; }
+    canvas { width: 100%; max-width: 960px; height: auto; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.55); border: 2px solid rgba(255,255,255,0.14); }
+    .panel {
+      width: 100%; max-width: 960px; background: #1e293b; border: 1px solid rgba(148,163,184,0.25);
+      border-radius: 14px; padding: 16px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;
+    }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 0.84rem; color: #cbd5e1; font-weight: 700; }
+    input { padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.3); background: #0f172a; color: #f8fafc; font-family: inherit; font-size: 0.95rem; }
+    button { padding: 11px 20px; border: none; border-radius: 11px; background: linear-gradient(120deg, #4ade80, #22d3ee); color: #0f172a; font-weight: 800; font-size: 0.95rem; cursor: pointer; white-space: nowrap; }
+    @media (max-width: 720px) { .panel { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎨 __PAGE_HEADING__</h1>
+    <a href="../index.html">← All Stories</a>
+  </div>
+  <canvas id="thumbCanvas" width="1280" height="720"></canvas>
+  <div class="panel">
+    <label>Main Headline <input id="headlineInput" type="text" /></label>
+    <label>Sub-badge Text <input id="subInput" type="text" /></label>
+    <button id="downloadBtn">⬇ Download 1280×720 JPG</button>
+  </div>
+
+  <script>
+    const CONFIG = __THUMB_JSON__;
+    const canvas = document.getElementById("thumbCanvas");
+    const ctx = canvas.getContext("2d");
+    const headlineInput = document.getElementById("headlineInput");
+    const subInput = document.getElementById("subInput");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    headlineInput.value = CONFIG.headline || "";
+    subInput.value = CONFIG.sub || "";
+
+    const bgImg = new Image();
+    bgImg.src = CONFIG.image;
+
+    function drawRoundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+
+    function render() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      if (bgImg.complete && bgImg.naturalWidth > 0) ctx.drawImage(bgImg, 0, 0, W, H);
+      else { ctx.fillStyle = "#0b1120"; ctx.fillRect(0, 0, W, H); }
+
+      const headline = headlineInput.value.trim() || CONFIG.headline;
+      const subText = subInput.value.trim() || CONFIG.sub;
+
+      ctx.save();
+      ctx.translate(46, 138);
+      ctx.rotate(-0.025);
+      let fontSize = 76;
+      ctx.font = `900 ${fontSize}px sans-serif`;
+      while (ctx.measureText(headline).width > 710 && fontSize > 44) {
+        fontSize -= 2; ctx.font = `900 ${fontSize}px sans-serif`;
+      }
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0,0,0,0.85)"; ctx.shadowBlur = 14; ctx.shadowOffsetY = 7;
+      ctx.lineWidth = 14; ctx.lineJoin = "round"; ctx.strokeStyle = "#070b18"; ctx.strokeText(headline, 0, 0);
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; ctx.lineWidth = 5; ctx.strokeStyle = "#fff"; ctx.strokeText(headline, 0, 0);
+      const grad = ctx.createLinearGradient(0, -45, 0, 45);
+      grad.addColorStop(0, "#fef08a"); grad.addColorStop(0.55, "#facc15"); grad.addColorStop(1, "#f97316");
+      ctx.fillStyle = grad; ctx.fillText(headline, 0, 0);
+
+      if (subText) {
+        ctx.font = '800 30px sans-serif';
+        const subW = ctx.measureText(subText).width + 44, subH = 52;
+        ctx.shadowColor = "rgba(0,0,0,0.55)"; ctx.shadowBlur = 12; ctx.shadowOffsetY = 4;
+        drawRoundedRect(6, 54, subW, subH, 26);
+        const pGrad = ctx.createLinearGradient(6, 54, 6 + subW, 106);
+        pGrad.addColorStop(0, "#38bdf8"); pGrad.addColorStop(1, "#6366f1");
+        ctx.fillStyle = pGrad; ctx.fill();
+        ctx.shadowBlur = 0; ctx.lineWidth = 4; ctx.strokeStyle = "#fff"; ctx.stroke();
+        ctx.fillStyle = "#fff"; ctx.textAlign = "center"; ctx.fillText(subText, 6 + subW / 2, 54 + subH / 2 + 2);
+      }
+      ctx.restore();
+
+      ctx.save();
+      const handle = CONFIG.handle || "@YourChannel";
+      ctx.font = '700 26px sans-serif';
+      const hw = ctx.measureText(handle).width + 36, hh = 46;
+      const hx = W - hw - 26, hy = 24;
+      drawRoundedRect(hx, hy, hw, hh, 23);
+      ctx.fillStyle = "rgba(15,23,42,0.88)"; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = "#fde047"; ctx.stroke();
+      ctx.fillStyle = "#fde047"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(handle, hx + hw / 2, hy + hh / 2 + 1);
+      ctx.restore();
+    }
+
+    downloadBtn.addEventListener("click", () => {
+      render();
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/jpeg", 0.94);
+      a.download = `${CONFIG.slug}_thumbnail_1280x720.jpg`;
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+    headlineInput.addEventListener("input", render);
+    subInput.addEventListener("input", render);
+    bgImg.onload = () => document.fonts.ready.then(render);
+    document.fonts.ready.then(render);
+  </script>
+</body>
+</html>
